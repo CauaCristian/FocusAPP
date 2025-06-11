@@ -1,6 +1,7 @@
 package com.softwaremobi.api_estudos.Controllers;
 
 import com.softwaremobi.api_estudos.DTO.ResponseDTO;
+import com.softwaremobi.api_estudos.DTO.ResponseLoginDTO;
 import com.softwaremobi.api_estudos.DTO.UserRegisterDTO;
 import com.softwaremobi.api_estudos.Mappers.UserMapper;
 import com.softwaremobi.api_estudos.Models.UserModel;
@@ -35,26 +36,27 @@ public class AuthController {
     private UserMapper userMapper;
 
     @PostMapping(value = "/login",produces = MediaType.APPLICATION_JSON_VALUE,consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ResponseDTO<String>> login(@RequestBody @Valid UserRegisterDTO userRegisterDTO) throws Exception {
+    public ResponseEntity<ResponseLoginDTO> login(@RequestBody @Valid UserRegisterDTO userRegisterDTO) throws Exception {
         var usernamePassword = new UsernamePasswordAuthenticationToken(userRegisterDTO.getUsername(), userRegisterDTO.getPassword());
         var autenticacao = authenticationManager.authenticate(usernamePassword);
         var token = tokenService.gerarToken((UserModel) autenticacao.getPrincipal());
-        ResponseDTO<String> response = new ResponseDTO<String>(false,"Login efetuado com sucesso!!!",token);
+        UserModel userModel = (UserModel) userRepository.findByUsername(userRegisterDTO.getUsername());
+        ResponseLoginDTO response = new ResponseLoginDTO(false,"Login efetuado com sucesso!!!",token,userModel);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping(value = "/register",produces = MediaType.APPLICATION_JSON_VALUE,consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ResponseDTO<String>> registroUser(@RequestBody @Valid UserRegisterDTO userRegisterDTO) throws Exception{
+    public ResponseEntity<ResponseLoginDTO> registroUser(@RequestBody @Valid UserRegisterDTO userRegisterDTO) throws Exception{
         if(userRepository.findByUsername(userRegisterDTO.getUsername())==null){
             var passwordEncoder = new BCryptPasswordEncoder().encode(userRegisterDTO.getPassword());
             UserModel userModel = userMapper.toModel(userRegisterDTO);
             userModel.setPassword(passwordEncoder);
             userRepository.save(userModel);
             var token = tokenService.gerarToken(userModel);
-            ResponseDTO<String> response = new ResponseDTO<String>(false,"Registro efetuado com sucesso!!!",token);
+            ResponseLoginDTO response = new ResponseLoginDTO(false,"Registro efetuado com sucesso!!!",token, userModel);
             return ResponseEntity.ok(response);
         }
-        ResponseDTO<String> badResponse = new ResponseDTO<String>(true,"Username em uso",null);
+        ResponseLoginDTO badResponse = new ResponseLoginDTO(true,"Username em uso",null,null);
         return ResponseEntity.status(400).body(badResponse);
     }
 }
