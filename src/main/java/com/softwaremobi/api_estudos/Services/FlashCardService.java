@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+
 @Service
 public class FlashCardService {
     @Autowired
@@ -20,18 +22,18 @@ public class FlashCardService {
     @Autowired
     private UserRepository userRepository;
 
-    public ResponseEntity register(FlashCardRegisterDTO flashCardRegisterDTO,String idUser) {
+    public ResponseEntity<ResponseDTO<ArrayList<FlashCardModel>>> register(FlashCardRegisterDTO flashCardRegisterDTO, String idUser) {
         UserModel user = userRepository.findById(idUser).orElse(null);
         FlashCardModel  flashCardModel = flashCardMapper.toModel(flashCardRegisterDTO);
         flashCardRepository.save(flashCardModel);
         user.addFlashCard(flashCardModel);
         userRepository.save(user);
-        ResponseDTO responseDTO = new ResponseDTO(false,"FlashCard adicionado com sucesso!!!",user.getFlashCardModels());
+        ResponseDTO<ArrayList<FlashCardModel>> responseDTO = new ResponseDTO<ArrayList<FlashCardModel>>(false,"FlashCard adicionado com sucesso!!!",user.getFlashCardModels());
         return ResponseEntity.ok(responseDTO);
     }
-    public ResponseEntity update(FlashCardModel flashCardModel) {
+    public ResponseEntity<ResponseDTO<FlashCardModel>> update(FlashCardModel flashCardModel) {
         flashCardRepository.save(flashCardModel);
-        ResponseDTO responseDTO = new ResponseDTO(false,"FlashCard editado com sucesso!!!",flashCardModel);
+        ResponseDTO responseDTO = new ResponseDTO<FlashCardModel>(false,"FlashCard editado com sucesso!!!",flashCardModel);
         return ResponseEntity.ok(responseDTO);
     }
 }

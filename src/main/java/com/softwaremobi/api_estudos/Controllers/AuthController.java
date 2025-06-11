@@ -35,26 +35,26 @@ public class AuthController {
     private UserMapper userMapper;
 
     @PostMapping(value = "/login",produces = MediaType.APPLICATION_JSON_VALUE,consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity login(@RequestBody @Valid UserRegisterDTO userRegisterDTO) throws Exception {
+    public ResponseEntity<ResponseDTO<String>> login(@RequestBody @Valid UserRegisterDTO userRegisterDTO) throws Exception {
         var usernamePassword = new UsernamePasswordAuthenticationToken(userRegisterDTO.getUsername(), userRegisterDTO.getPassword());
         var autenticacao = authenticationManager.authenticate(usernamePassword);
         var token = tokenService.gerarToken((UserModel) autenticacao.getPrincipal());
-        var response = new ResponseDTO<String>(false,"Login efetuado com sucesso!!!",token);
+        ResponseDTO<String> response = new ResponseDTO<String>(false,"Login efetuado com sucesso!!!",token);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping(value = "/register",produces = MediaType.APPLICATION_JSON_VALUE,consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity registroUser(@RequestBody @Valid UserRegisterDTO userRegisterDTO) throws Exception{
+    public ResponseEntity<ResponseDTO<String>> registroUser(@RequestBody @Valid UserRegisterDTO userRegisterDTO) throws Exception{
         if(userRepository.findByUsername(userRegisterDTO.getUsername())==null){
             var passwordEncoder = new BCryptPasswordEncoder().encode(userRegisterDTO.getPassword());
             UserModel userModel = userMapper.toModel(userRegisterDTO);
             userModel.setPassword(passwordEncoder);
             userRepository.save(userModel);
             var token = tokenService.gerarToken(userModel);
-            var response = new ResponseDTO<String>(false,"Registro efetuado com sucesso!!!",token);
+            ResponseDTO<String> response = new ResponseDTO<String>(false,"Registro efetuado com sucesso!!!",token);
             return ResponseEntity.ok(response);
         }
-        var badResponse = new ResponseDTO<String>(true,"Username em uso",null);
+        ResponseDTO<String> badResponse = new ResponseDTO<String>(true,"Username em uso",null);
         return ResponseEntity.status(400).body(badResponse);
     }
 }
